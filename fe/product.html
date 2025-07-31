@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Danh sách sản phẩm - TrantinDat</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="components/header.css" />
+  <link rel="stylesheet" href="components/product.css" />
+  <style>
+    .search-bar {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .search-bar input {
+      width: 300px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .search-bar input:focus {
+      border-color: #d11111;
+      box-shadow: 0 0 5px rgba(209, 17, 17, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <div class="container">
+    <h2 class="section-title">DANH SÁCH SẢN PHẨM</h2>
+
+    <!-- Tìm kiếm -->
+    <div class="search-bar">
+      <input type="text" id="product-search" placeholder="Tìm sản phẩm..." />
+    </div>
+
+    <!-- Bộ lọc -->
+    <div class="filter-container">
+      <div class="filter-group">
+        <span>Danh mục:</span>
+        <button onclick="filterByCategory('')">Tất cả</button>
+        <button onclick="filterByCategory('Cà phê')">Cà phê</button>
+        <button onclick="filterByCategory('Trà')">Trà</button>
+        <button onclick="filterByCategory('Đá xay')">Đá xay</button>
+        <button onclick="filterByCategory('Bánh ngọt')">Bánh ngọt</button>
+      </div>
+      <div class="filter-group">
+        <span>Tags:</span>
+        <button onclick="filterByTag('')">Tất cả</button>
+        <button onclick="filterByTag('cake')">Cake</button>
+        <button onclick="filterByTag('milk')">Milk</button>
+        <button onclick="filterByTag('dessert')">Dessert</button>
+      </div>
+      <div class="filter-group">
+        <label for="sort">Sắp xếp:</label>
+        <select id="sort" onchange="sortProducts()">
+          <option value="default">Mặc định</option>
+          <option value="asc">Giá tăng dần</option>
+          <option value="desc">Giá giảm dần</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Danh sách sản phẩm -->
+    <div id="product-list" class="product-grid"></div>
+  </div>
+
+  <script>
+    let productsData = [];
+
+    fetch("components/header.html")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("header-placeholder").innerHTML = data;
+        const script = document.createElement("script");
+        script.src = "components/header.js";
+        script.onload = () => {
+          if (typeof renderUserSection === 'function') renderUserSection();
+          updateCartCount();
+        };
+        document.body.appendChild(script);
+      });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedCategory = urlParams.get("category");
+    const selectedTag = urlParams.get("tag");
+
+fetch("https://trantindatcf.onrender.com/api/products")
+
+      .then(res => res.json())
+      .then(products => {
+        productsData = products;
+        renderFiltered(products);
+      })
+      .catch(err => {
+        console.error("Lỗi khi tải sản phẩm:", err);
+        document.getElementById("product-list").innerHTML = "<p style='text-align:center;'>Không thể tải sản phẩm từ máy chủ.</p>";
+      });
+
+    function renderFiltered(products) {
+      let filtered = products;
+
+      if (selectedCategory) {
+        filtered = filtered.filter(p => p.category.trim() === selectedCategory.trim());
+      } else if (selectedTag) {
+        filtered = filtered.filter(p => (p.tags || []).includes(selectedTag));
+      }
+
+      renderProductList(filtered);
+    }
+
+    function renderProductList(products) {
+      const list = document.getElementById("product-list");
+      list.innerHTML = "";
+
+      if (products.length === 0) {
+        list.innerHTML = "<p style='text-align:center;'>Không tìm thấy sản phẩm nào.</p>";
+        return;
+      }
+
+      products.forEach(product => {
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.innerHTML = `
+          <a href="product-detail.html?id=${product.id}" class="product-link">
+            <img src="${product.image}" alt="${product.name}" />
+            <h3>${product.name}</h3>
+            <div class="star">★★★★★</div>
+            <div class="price">${product.price.toLocaleString()} VNĐ</div>
+          </a>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function filterByCategory(category) {
+      const url = category ? `?category=${encodeURIComponent(category)}` : '';
+      window.location.href = `product.html${url}`;
+    }
+
+    function filterByTag(tag) {
+      const url = tag ? `?tag=${encodeURIComponent(tag)}` : '';
+      window.location.href = `product.html${url}`;
+    }
+
+    function sortProducts() {
+      const sort = document.getElementById("sort").value;
+      let sorted = [...productsData];
+
+      if (sort === "asc") {
+        sorted.sort((a, b) => a.price - b.price);
+      } else if (sort === "desc") {
+        sorted.sort((a, b) => b.price - a.price);
+      }
+
+      renderFiltered(sorted);
+    }
+
+    // Tìm kiếm
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById("product-search");
+      searchInput.addEventListener("input", function () {
+        const keyword = this.value.toLowerCase();
+        const filtered = productsData.filter(p =>
+          p.name.toLowerCase().includes(keyword)
+        );
+        renderProductList(filtered);
+      });
+    });
+  </script>
+
+  <script src="components/cart.js"></script>
+</body>
+</html>

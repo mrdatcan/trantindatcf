@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrantinDat Coffee</title>
+
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="components/header.css" />
+  <link rel="stylesheet" href="components/banner.css" />
+  <link rel="stylesheet" href="components/category.css" />
+  <link rel="stylesheet" href="components/product.css" />
+  <link rel="stylesheet" href="components/news.css" />
+</head>
+<body>
+  <div id="wrapper">
+    <div id="header-placeholder"></div>
+    <div id="banner-placeholder"></div>
+
+    <section class="category-section">
+      <h2 class="section-title">DANH MỤC</h2>
+      <div id="category-placeholder"></div>
+    </section>
+
+    <section class="featured-product-section">
+      <h2 class="section-title">SẢN PHẨM NỔI BẬT</h2>
+      <div id="featured-product-list" class="product-list"></div>
+    </section>
+
+    <section class="product-section">
+      <h2 class="section-title">SẢN PHẨM</h2>
+      <div class="product-tabs">
+        <button class="tab-btn active" onclick="showTab('new')">Sản phẩm mới</button>
+        <button class="tab-btn" onclick="showTab('bestseller')">Bán chạy</button>
+        <button class="tab-btn" onclick="showTab('mostviewed')">Xem nhiều</button>
+      </div>
+      <div class="product-tab-content">
+        <div id="tab-new" class="tab-panel active"></div>
+        <div id="tab-bestseller" class="tab-panel"></div>
+        <div id="tab-mostviewed" class="tab-panel"></div>
+      </div>
+    </section>
+
+    <section class="video-section">
+      <h2 class="section-title">KHÁM PHÁ TRANTINDAT</h2>
+      <div class="video-wrapper" style="text-align:center; padding: 20px;">
+        <iframe width="560" height="315"
+          src="https://www.youtube.com/embed/JCGfJoOYANE"
+          title="Giới thiệu TrantinDat"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+
+    <section class="testimonial-section">
+      <h2 class="section-title">KHÁCH HÀNG NÓI GÌ?</h2>
+      <div class="testimonial-container">
+        <div class="testimonial-card"><p>🥽 “Cà phê phin chuẩn vị, giao nhanh, rất hài lòng!”</p><strong>- Linh, Hà Nội</strong></div>
+        <div class="testimonial-card"><p>🍵 “Matcha thơm ngon, béo vừa phải. Rất recommend!”</p><strong>- Minh, Đà Nẵng</strong></div>
+        <div class="testimonial-card"><p>🚚 “Đóng gói cẩn thận, bánh ngon, dịch vụ 10/10.”</p><strong>- Duy, TP.HCM</strong></div>
+      </div>
+    </section>
+
+    <section class="news-section">
+      <h2 class="section-title">TIN TỨC MỚI</h2>
+      <div class="news-slider" id="news-placeholder"></div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+  </div>
+
+  <script>
+const API_URL = "https://trantindatcf.onrender.com/api/products";
+
+    function loadHTML(id, path) {
+      fetch(path)
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById(id).innerHTML = data;
+          if (id === "header-placeholder") {
+            const script = document.createElement("script");
+            script.src = "components/header.js";
+            script.onload = () => {
+              if (typeof renderUserSection === 'function') renderUserSection();
+              if (typeof updateCartCount === 'function') updateCartCount();
+            };
+            document.body.appendChild(script);
+          }
+        });
+    }
+
+    loadHTML("header-placeholder", "components/header.html");
+    loadHTML("banner-placeholder", "components/banner.html");
+    loadHTML("category-placeholder", "components/category-section.html");
+    loadHTML("footer-placeholder", "components/footer.html");
+
+    function cleanString(str) {
+      return typeof str === "string" ? str.trim().replace(/[^a-zA-Z0-9-_]/g, "") : "";
+    }
+
+    function addToCart(product) {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      const cleanedId = cleanString(product.id);
+      const existingItem = cart.find(item => cleanString(item.id) === cleanedId);
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          id: cleanedId,
+          name: product.name,
+          price: Number(product.price),
+          image: product.image,
+          quantity: 1
+        });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount?.();
+      alert("Đã thêm vào giỏ hàng!");
+    }
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const el = document.querySelector(".cart-count");
+      if (el) el.textContent = total;
+    }
+
+    function loadFeaturedProducts() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(products => {
+          const featuredList = document.getElementById("featured-product-list");
+          featuredList.innerHTML = "";
+          const featured = products.filter(p => p.tags && p.tags.includes("bestseller"));
+          featured.forEach(product => {
+            const item = document.createElement("div");
+            item.className = "product-card";
+            item.innerHTML = `
+              <img src="${product.image}" alt="${product.name}" />
+              <h3>${product.name}</h3>
+<p>${Number(product.price).toLocaleString()}đ</p>
+              <button class="add-to-cart-btn"
+                data-id="${product.id}"
+                data-name="${product.name}"
+                data-price="${product.price}"
+                data-image="${product.image}">
+                Thêm vào giỏ
+              </button>
+            `;
+            featuredList.appendChild(item);
+          });
+        })
+        .catch(err => {
+          console.error("Lỗi khi tải sản phẩm nổi bật:", err);
+        });
+    }
+
+    function loadTabbedProducts() {
+      const tabs = {
+        "new": "tab-new",
+        "bestseller": "tab-bestseller",
+        "mostviewed": "tab-mostviewed"
+      };
+
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(products => {
+          for (const tag in tabs) {
+            const container = document.getElementById(tabs[tag]);
+            container.innerHTML = "";
+            const filtered = products.filter(p => p.tags && p.tags.includes(tag));
+            filtered.forEach(product => {
+              const item = document.createElement("div");
+              item.className = "product-card";
+              item.innerHTML = `
+                <img src="${product.image}" alt="${product.name}" />
+                <h3>${product.name}</h3>
+<p>${Number(product.price).toLocaleString()}đ</p>
+                <button class="add-to-cart-btn"
+                  data-id="${product.id}"
+                  data-name="${product.name}"
+                  data-price="${product.price}"
+                  data-image="${product.image}">
+                  Thêm vào giỏ
+                </button>
+              `;
+              container.appendChild(item);
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Lỗi khi tải sản phẩm tab:", err);
+        });
+    }
+
+    function showTab(tabName) {
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("tab-" + tabName).classList.add("active");
+      event.target.classList.add("active");
+    }
+
+    // Xử lý sự kiện click Thêm vào giỏ qua event delegation
+    document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("add-to-cart-btn")) {
+        const btn = e.target;
+        const product = {
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: btn.dataset.price,
+          image: btn.dataset.image
+        };
+        addToCart(product);
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCartCount();
+      loadFeaturedProducts();
+      loadTabbedProducts();
+    });
+  </script>
+  <script src="components/cart.js"></script>
+
+</body>
+</html>

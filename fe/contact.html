@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Liên hệ - TrantinDat Coffee</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="components/header.css" />
+  <link rel="stylesheet" href="components/footer.css" />
+
+  <style>
+    .contact-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .contact-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .contact-container form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .contact-container input,
+    .contact-container textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    .contact-container button {
+      background-color: #d32f2f;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .contact-container button:hover {
+      background-color: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <!-- HEADER -->
+    <div id="header-placeholder"></div>
+
+    <!-- FORM LIÊN HỆ -->
+    <section class="contact-container">
+      <h2>Liên hệ với TrantinDat</h2>
+      <form onsubmit="submitContactForm(event)">
+        <input type="text" id="name" placeholder="Họ và tên" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <textarea id="message" rows="5" placeholder="Nội dung liên hệ" required></textarea>
+        <button type="submit">Gửi liên hệ</button>
+      </form>
+    </section>
+
+    <!-- FOOTER -->
+    <div id="footer-placeholder"></div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    function submitContactForm(event) {
+      event.preventDefault();
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const message = document.getElementById("message").value;
+
+      alert(`Cảm ơn ${name}! Chúng tôi sẽ phản hồi bạn qua email: ${email}.`);
+      document.querySelector("form").reset();
+    }
+
+    // Load header & footer
+    const loadHTML = (id, path) => {
+      fetch(path)
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById(id).innerHTML = data;
+          if (id === "header-placeholder") {
+            const script = document.createElement("script");
+            script.src = "components/header.js";
+            script.onload = () => {
+              if (typeof renderUserSection === 'function') renderUserSection();
+            };
+            document.body.appendChild(script);
+          }
+        });
+    };
+
+    loadHTML("header-placeholder", "components/header.html");
+    loadHTML("footer-placeholder", "components/footer.html");
+  </script>
+</body>
+</html>

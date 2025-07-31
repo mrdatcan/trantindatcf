@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chi tiết sản phẩm</title>
+  <link rel="stylesheet" href="components/product-detail.css" />
+  <link rel="stylesheet" href="components/header.css" />
+
+</head>
+<body>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Nội dung chi tiết sản phẩm -->
+  <div id="product-detail" class="product-detail"></div>
+
+  <script>
+const API_URL = "https://trantindatcf.onrender.com/api/products";
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get("id");
+
+    // Load header và khởi tạo giỏ hàng
+    fetch("components/header.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
+        const script = document.createElement("script");
+        script.src = "components/header.js";
+        script.onload = () => {
+          if (typeof renderUserSection === 'function') renderUserSection();
+          if (typeof updateCartCount === 'function') updateCartCount();
+        };
+        document.body.appendChild(script);
+      });
+
+    if (!productId) {
+      document.getElementById("product-detail").innerHTML = "<p>ID sản phẩm không hợp lệ.</p>";
+    } else {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const product = data.find(p => String(p.id) === String(productId));
+          if (!product) {
+            document.getElementById("product-detail").innerHTML = "<p>Sản phẩm không tồn tại.</p>";
+            return;
+          }
+
+          document.getElementById("product-detail").innerHTML = `
+            <div class="detail-container">
+              <img src="${product.image}" alt="${product.name}" />
+              <div class="info">
+                <h1>${product.name}</h1>
+                <p>Giá: ${product.price.toLocaleString()} VNĐ</p>
+                <p>${product.description || "Sản phẩm chất lượng cao được nhiều khách hàng yêu thích."}</p>
+                <button onclick='addToCart(${JSON.stringify(product)})'>Thêm vào giỏ</button>
+              </div>
+            </div>
+          `;
+        })
+        .catch(() => {
+          document.getElementById("product-detail").innerHTML = "<p>Không thể tải dữ liệu sản phẩm.</p>";
+        });
+    }
+
+    // Thêm vào giỏ hàng
+    function addToCart(product) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      const existing = cart.find(item => String(item.id) === String(product.id));
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+cart.push({
+  id: product.id,
+  name: product.name.trim(),
+  price: Number(product.price),
+  image: product.image.trim(),
+  quantity: 1
+});
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount?.();
+      alert("Đã thêm vào giỏ hàng!");
+    }
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const el = document.querySelector(".cart-count");
+      if (el) el.textContent = total;
+    }
+  </script>
+</body>
+</html>

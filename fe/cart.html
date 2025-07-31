@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giỏ hàng | TrantinDat Coffee</title>
+  <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="components/header.css" />
+
+  <style>
+    .cart-container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding: 12px 0;
+    }
+    .cart-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 16px;
+    }
+    .cart-item h4 {
+      margin: 0 0 4px;
+    }
+    .cart-item .price {
+      color: red;
+    }
+    .cart-item .quantity {
+      display: flex;
+      align-items: center;
+      margin-top: 6px;
+    }
+    .quantity button {
+      padding: 4px 8px;
+      font-size: 16px;
+      margin: 0 6px;
+      cursor: pointer;
+    }
+    .cart-total {
+      text-align: right;
+      font-size: 20px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .remove-btn {
+      margin-left: auto;
+      background: transparent;
+      border: none;
+      color: #888;
+      cursor: pointer;
+    }
+    .remove-btn:hover {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <div class="cart-container">
+    <h2>🛒 Giỏ hàng của bạn</h2>
+    <div id="cart-list"></div>
+    <div class="cart-total" id="cart-total">Tổng: 0đ</div>
+  </div>
+
+  <script>
+    function updateCartCount() {
+  const cart = JSON.parse(localStorage.getItem("cart")) || [];
+  const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const el = document.querySelector(".cart-count");
+  if (el) el.textContent = total;
+}
+
+    function formatPrice(price) {
+      return Number(price).toLocaleString("vi-VN") + "đ";
+    }
+
+    function renderCart() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const cartList = document.getElementById("cart-list");
+      const cartTotal = document.getElementById("cart-total");
+      cartList.innerHTML = "";
+      let total = 0;
+
+      if (cart.length === 0) {
+        cartList.innerHTML = "<p>Giỏ hàng của bạn đang trống.</p>";
+        cartTotal.textContent = "Tổng: 0đ";
+        return;
+      }
+
+      cart.forEach((item, index) => {
+        const subtotal = item.price * item.quantity;
+        total += subtotal;
+
+        const el = document.createElement("div");
+        el.className = "cart-item";
+        el.innerHTML = `
+          <img src="${item.image}" alt="${item.name}" />
+          <div>
+            <h4>${item.name}</h4>
+            <div class="price">${formatPrice(item.price)} x ${item.quantity}</div>
+            <div class="quantity">
+              <button onclick="updateQuantity(${index}, -1)">-</button>
+              <span>${item.quantity}</span>
+              <button onclick="updateQuantity(${index}, 1)">+</button>
+            </div>
+          </div>
+          <button class="remove-btn" onclick="removeItem(${index})">🗑</button>
+        `;
+        cartList.appendChild(el);
+      });
+
+      cartTotal.textContent = "Tổng: " + formatPrice(total);
+      updateCartCount();
+
+    }
+
+    function updateQuantity(index, delta) {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      if (!cart[index]) return;
+      cart[index].quantity += delta;
+      if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+      }
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+      updateCartCount();
+
+    }
+
+    function removeItem(index) {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.splice(index, 1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+      updateCartCount();
+
+    }
+
+    document.addEventListener("DOMContentLoaded", renderCart);
+    fetch("components/header.html")
+  .then(res => res.text())
+  .then(data => {
+    document.getElementById("header-placeholder").innerHTML = data;
+    const script = document.createElement("script");
+    script.src = "components/header.js";
+    script.onload = () => {
+      if (typeof renderUserSection === 'function') renderUserSection();
+      if (typeof updateCartCount === 'function') updateCartCount();
+    };
+    document.body.appendChild(script);
+  });
+
+  </script>
+</body>
+</html>

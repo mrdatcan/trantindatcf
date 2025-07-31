@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tin tức & Sự kiện</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="components/news.css">
+</head>
+<body>
+
+  <section class="news-section">
+    <h2 class="section-title">TIN TỨC MỚI</h2>
+    <div class="news-wrapper">
+      <button class="news-prev">‹</button>
+      <div class="news-slider" id="news-slider"></div>
+      <button class="news-next">›</button>
+    </div>
+  </section>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const slider = document.getElementById("news-slider");
+
+      fetch("data/news.json")
+        .then(res => res.json())
+        .then(data => {
+          data.forEach(news => {
+            const div = document.createElement("div");
+            div.className = "news-item";
+            div.innerHTML = `
+              <img src="${news.image}" alt="${news.title}">
+              <div class="news-info">
+                <h3>${news.title}</h3>
+                <p>${news.date}</p>
+              </div>
+            `;
+            slider.appendChild(div);
+          });
+        });
+
+      document.querySelector(".news-prev").addEventListener("click", () => {
+        slider.scrollBy({ left: -320, behavior: "smooth" });
+      });
+
+      document.querySelector(".news-next").addEventListener("click", () => {
+        slider.scrollBy({ left: 320, behavior: "smooth" });
+      });
+    });
+  </script>
+</body>
+</html>

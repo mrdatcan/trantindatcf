@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh mục sản phẩm</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="components/product.css">
+  <link rel="stylesheet" href="components/category.css">
+  <link rel="stylesheet" href="components/header.css">
+</head>
+<body>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+  <!-- Tìm kiếm và bộ lọc -->
+  <section class="filter-bar">
+    <input type="text" id="category-search" placeholder="Tìm sản phẩm...">
+    <select id="filter-price">
+      <option value="all">Tất cả</option>
+      <option value="low">Dưới 30.000đ</option>
+      <option value="mid">30.000đ – 50.000đ</option>
+      <option value="high">Trên 50.000đ</option>
+    </select>
+    <select id="sort-product">
+      <option value="default">Mặc định</option>
+      <option value="asc">Giá tăng dần</option>
+      <option value="desc">Giá giảm dần</option>
+    </select>
+  </section>
+
+  <!-- DANH MỤC -->
+  <section class="top-category">
+    <h2 class="section-title">Danh mục sản phẩm</h2>
+    <div class="category-cards">
+      <div class="category-card" onclick="scrollToSection('coffee')">
+        <img src="img/news1.jpg" alt="Cà phê">
+        <p>Cà phê</p>
+      </div>
+      <div class="category-card" onclick="scrollToSection('tea')">
+        <img src="img/news2.jpg" alt="Trà">
+        <p>Trà</p>
+      </div>
+      <div class="category-card" onclick="scrollToSection('cake')">
+        <img src="img/news3.jpg" alt="Bánh ngọt">
+        <p>Bánh ngọt</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DANH SÁCH SẢN PHẨM THEO DANH MỤC -->
+  <section id="coffee" class="product-section">
+    <h3 class="category-title">Cà phê</h3>
+    <div class="product-list"></div>
+  </section>
+
+  <section id="tea" class="product-section">
+    <h3 class="category-title">Trà</h3>
+    <div class="product-list"></div>
+  </section>
+
+  <section id="cake" class="product-section">
+    <h3 class="category-title">Bánh ngọt</h3>
+    <div class="product-list"></div>
+  </section>
+
+  <!-- Product Popup -->
+  <div id="product-popup" class="popup hidden">
+    <div class="popup-content">
+      <span class="close-btn" onclick="closePopup()">&times;</span>
+      <img id="popup-image" src="" alt="Product Image">
+      <h3 id="popup-name"></h3>
+      <p id="popup-desc"></p>
+      <p id="popup-price"></p>
+    </div>
+  </div>
+
+  <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️</button>
+
+  <script>
+const API_URL = "https://trantindatcf.onrender.com/api/products";
+    let allProducts = [];
+
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function cleanString(str) {
+      return (str || "").trim().replace(/[^a-zA-Z0-9-_]/g, "");
+    }
+
+    fetch("components/header.html")
+      .then(res => res.text())
+      .then(data => {
+        document.getElementById("header-placeholder").innerHTML = data;
+       const script = document.createElement("script");
+script.src = "components/header.js";
+script.onload = () => {
+  if (typeof renderUserSection === 'function') renderUserSection();
+  updateCartCount(); // 🟢 cập nhật cart count sau khi header render
+};
+document.body.appendChild(script);
+
+      });
+
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(products => {
+        allProducts = products;
+        renderProducts(products);
+      })
+      .catch(err => console.error("Lỗi khi load sản phẩm:", err));
+
+    function renderProducts(products) {
+      const map = {
+        coffee: document.querySelector("#coffee .product-list"),
+        tea: document.querySelector("#tea .product-list"),
+        cake: document.querySelector("#cake .product-list")
+      };
+      Object.values(map).forEach(el => el.innerHTML = "");
+
+      products.forEach(p => {
+        const tags = p.tags || [];
+        tags.forEach(tag => {
+          if (map[tag]) {
+            const div = document.createElement("div");
+            div.className = "product-item";
+            div.innerHTML = `
+              <img src="${p.image}" alt="${p.name}" />
+              <h3>${p.name}</h3>
+              <p>${Number(p.price).toLocaleString()}đ</p>
+              <button class="add-to-cart"
+                data-id="${p.id}"
+                data-name="${p.name}"
+                data-price="${p.price}"
+                data-image="${p.image}">Mua ngay</button>
+              <button onclick='showPopup(${JSON.stringify(p)})'>Chi tiết</button>
+            `;
+            map[tag].appendChild(div);
+          }
+        });
+      });
+    }
+
+    document.getElementById("category-search").addEventListener("input", filterAndRender);
+    document.getElementById("filter-price").addEventListener("change", filterAndRender);
+    document.getElementById("sort-product").addEventListener("change", filterAndRender);
+
+    function filterAndRender() {
+      const keyword = document.getElementById("category-search").value.toLowerCase();
+      const priceFilter = document.getElementById("filter-price").value;
+      const sortOrder = document.getElementById("sort-product").value;
+
+      let filtered = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
+
+      if (priceFilter !== "all") {
+        filtered = filtered.filter(p => {
+          if (priceFilter === "low") return p.price < 30000;
+          if (priceFilter === "mid") return p.price >= 30000 && p.price <= 50000;
+          if (priceFilter === "high") return p.price > 50000;
+        });
+      }
+
+      if (sortOrder === "asc") filtered.sort((a, b) => a.price - b.price);
+      if (sortOrder === "desc") filtered.sort((a, b) => b.price - a.price);
+
+      renderProducts(filtered);
+    }
+
+    function showPopup(product) {
+      document.getElementById("popup-image").src = product.image;
+      document.getElementById("popup-name").textContent = product.name;
+      document.getElementById("popup-desc").textContent = "Sản phẩm chất lượng cao.";
+      document.getElementById("popup-price").textContent = product.price.toLocaleString() + "đ";
+      document.getElementById("product-popup").classList.remove("hidden");
+    }
+
+    function closePopup() {
+      document.getElementById("product-popup").classList.add("hidden");
+    }
+
+    function addToCart(product) {
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const cleanedId = cleanString(product.id);
+      const existingItem = cart.find(item => cleanString(item.id) === cleanedId);
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({
+          id: cleanedId,
+          name: product.name.trim().replace(/,+$/, ""),
+          price: Number(product.price),
+          image: product.image.trim().replace(/,+$/, ""),
+          quantity: 1
+        });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount?.();
+      alert("Đã thêm vào giỏ hàng!");
+    }
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+      const el = document.querySelector(".cart-count");
+      if (el) el.textContent = total;
+    }
+
+    document.addEventListener("click", e => {
+      if (e.target.classList.contains("add-to-cart")) {
+        const btn = e.target;
+        const product = {
+          id: btn.dataset.id,
+          name: btn.dataset.name,
+          price: Number(btn.dataset.price),
+          image: btn.dataset.image
+        };
+        addToCart(product);
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      updateCartCount();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closePopup();
+    });
+  </script>
+  <script src="components/cart.js"></script>
+
+</body>
+</html>

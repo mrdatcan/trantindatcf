@@ -1,0 +1,128 @@
+/* Header layout chính */
+.main-header {
+  background: linear-gradient(to right, #f7f7f7, #ffffff);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px 0;
+  font-family: 'Poppins', sans-serif;
+}
+
+.container {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+/* Logo */
+.logo a {
+  font-size: 28px;
+  font-weight: 700;
+  color: #cc3333;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.logo a:hover {
+  color: #991111;
+}
+
+/* Menu */
+.navbar a {
+  margin: 0 15px;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+.navbar a:hover {
+  color: #cc3333;
+}
+
+/* Tìm kiếm - Giỏ hàng - Tài khoản */
+.search-cart-user {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Tìm kiếm */
+.search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  overflow: hidden;
+  background: white;
+}
+.search-box input {
+  border: none;
+  padding: 6px 12px;
+  outline: none;
+}
+.search-box button {
+  background: #cc3333;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.search-box button:hover {
+  background: #991111;
+}
+
+/* Giỏ hàng */
+.header-cart {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+}
+.cart-icon {
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  text-decoration: none;
+}
+.cart-icon i {
+  font-size: 20px;
+}
+.cart-count {
+  display: inline-block;
+  background-color: #cc3333;
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  position: absolute;
+  top: -8px;
+  right: -10px;
+}
+
+/* Đăng nhập / chào user */
+#user-section {
+  margin-left: 10px;
+}
+#user-section button {
+  background-color: transparent;
+  border: 1px solid #000;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.login-button {
+  background-color: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  margin-left: 10px;
+  transition: background-color 0.3s;
+}
+.login-button:hover {
+  background-color: #555;
+}
